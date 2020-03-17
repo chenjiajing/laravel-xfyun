@@ -9,6 +9,6 @@ class TTS extends BaseXunFeiYun
   {
     $url = "wss://tts-api.xfyun.cn/v2/tts?authorization=AUTHORIZATION&date=DATE&host=HOST";
      $this->registerApi($url, __FUNCTION__, func_get_args());
-    return $this->httpPostForJson($url);
+    return $this->httpGetForJson($url);
   }
 }
