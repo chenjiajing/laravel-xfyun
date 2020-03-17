@@ -1,0 +1,43 @@
+{
+    "name": "chenjiajing/laravel-xfyun",
+  "description": "讯飞云 xfyun laravel sdk",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "chenjiajing",
+      "email": "i@chenjiajing.com"
+    }
+  ],
+
+    "require": {},
+  "autoload": {
+    "classmap": [
+
+    ],
+    "psr-4": {
+      "ChenJiaJing\\XunFeiYun\\": "src/"
+    }
+  },
+  "keywords": [
+    "讯飞",
+    "xfyun",
+    "laravel"
+  ],
+  "autoload-dev": {
+    "psr-4": {
+      "ChenJiaJing\\XunFeiYun\\Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0.1-dev"
+    },
+    "laravel": {
+      "providers": [
+
+      ],
+      "aliases": {
+      }
+    }
+  }
+}
