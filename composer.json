@@ -9,7 +9,7 @@
     }
   ],
 
-    "require": {},
+   "require": {},
   "autoload": {
     "classmap": [
 
