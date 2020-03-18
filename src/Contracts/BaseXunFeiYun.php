@@ -1,4 +1,5 @@
 <?php
+
 namespace ChenJiaJing\XunFeiYun;
 
 use ChenJiaJing\XunFeiYun\Tools\ArrayTools;
@@ -57,24 +58,25 @@ class BaseXunFeiYun
    * @throws LocalCacheException
    * @throws InvalidResponseException
    */
-  public function getAuthorizationUrl($url){
-    if(!empty($this->authorization)){
+  public function getAuthorizationUrl($url)
+  {
+    if (!empty($this->authorization)) {
       return $this->authorization;
     }
 
-    $cache = $this->config->get('appid').'_authorization';
+    $cache               = $this->config->get('appid') . '_authorization';
     $this->authorization = CacheTools::getCache($cache);
-    if(!empty($this->authorization)){
+    if (!empty($this->authorization)) {
       return $this->authorization;
     }
     // 如果缓存中没有，则重新获取
     $api_key = $this->config->get('apikey');
-    $host = 'tts-api.xfyun.cn';
-    $date = gmstrftime("%a, %d %b %Y %T %Z",time());;
+    $host    = 'tts-api.xfyun.cn';
+    $date    = gmstrftime("%a, %d %b %Y %T %Z", time());;
     info($date);
     $signature_origin = "host: {$host}\ndate: {$date}\nrequest-line";
     info($signature_origin);
-    $signature_sha= hash_hmac('sha256',$signature_origin,$this->config->get('apisecret'));
+    $signature_sha = hash_hmac('sha256', $signature_origin, $this->config->get('apisecret'));
     info($signature_sha);
     $signature = base64_encode($signature_sha);
     info($signature);
@@ -82,29 +84,38 @@ class BaseXunFeiYun
     info($authorization_origin);
     $authorization = base64_encode($authorization_origin);
     info($authorization);
-    $url = str_replace(['AUTHORIZATION','DATE','HOST'],[$authorization,$date,$host], $url);
+    $url = str_replace(['AUTHORIZATION', 'DATE', 'HOST'], [$authorization, $date, $host], $url);
     info($url);
-    return  $url;
+    return $url;
   }
+
   /**
    * 以GET获取接口数据并转为数组
-   * @param string $url 接口地址
-   * @return array
+   * @param string $url 服务地址
+   * @return
    * @throws InvalidResponseException
    * @throws LocalCacheException
    */
-  protected function httpGetForJson($url)
+  protected function wsForJson($url)
   {
     try {
-      return HttpTools::json2arr(HttpTools::get($url));
+      $data   = '{"id":"1".....}';
+      info($url);
+      $client = new \WebSocket\Client($url); //实例化
+      $client->send($data); //发送数据
+      $result = $client->receive(); //接收数据
+      info($result);
+      $client->close();//关闭连接
+      return $result;
     } catch (InvalidResponseException $e) {
-      if (isset($this->currentMethod['method']) && empty($this->isTry)) {
-        if (in_array($e->getCode(), ['40014', '40001', '41001', '42001'])) {
-        //  $this->delAccessToken();
-          $this->isTry = true;
-          return call_user_func_array([$this, $this->currentMethod['method']], $this->currentMethod['arguments']);
-        }
-      }
+          info($e);
+//      if (isset($this->currentMethod['method']) && empty($this->isTry)) {
+//        if (in_array($e->getCode(), ['40014', '40001', '41001', '42001'])) {
+//          //  $this->delAccessToken();
+//          $this->isTry = true;
+//          return call_user_func_array([$this, $this->currentMethod['method']], $this->currentMethod['arguments']);
+//        }
+//      }
       throw new InvalidResponseException($e->getMessage(), $e->getCode());
     }
   }
