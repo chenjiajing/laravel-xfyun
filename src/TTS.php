@@ -13,6 +13,6 @@ class TTS extends BaseXunFeiYun
   {
     $url = "wss://tts-api.xfyun.cn/v2/tts?authorization=AUTHORIZATION&date=DATE&host=HOST";
     $authorization_url  = $this->getAuthorizationUrl($url);
-    return $this->wsForJson($authorization_url,$content);
+    return $this->wsForResult($authorization_url,$content);
   }
 }

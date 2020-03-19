@@ -52,23 +52,6 @@ class BaseXunFeiYun
     $authorization = self::sign($time, $host);
     $url           = str_replace(['AUTHORIZATION', 'DATE', 'HOST'], [$authorization, urlencode($time), $host], $url);
     return $url;
-
-    $host = 'tts-api.xfyun.cn';
-    $date = gmstrftime("%a, %d %b %Y %T %Z", time());;
-    info($date);
-    $signature_origin = "host: {$host}\ndate: {$date}\nrequest-line";
-    info($signature_origin);
-    $signature_sha = hash_hmac('sha256', $signature_origin, $this->config->get('apisecret'));
-    info($signature_sha);
-    $signature = base64_encode($signature_sha);
-    info($signature);
-    $authorization_origin = "api_key={$api_key},algorithm='hmac-sha256',headers='host date request-line',signature={$signature}";
-    info($authorization_origin);
-    $authorization = base64_encode($authorization_origin);
-    info($authorization);
-    $url = str_replace(['AUTHORIZATION', 'DATE', 'HOST'], [$authorization, $date, $host], $url);
-    info($url);
-    return $url;
   }
 
 
@@ -94,7 +77,7 @@ class BaseXunFeiYun
    * @throws InvalidResponseException
    * @throws LocalCacheException
    */
-  protected function wsForJson($url, $content)
+  protected function wsForResult($url, $content)
   {
     $client = new Client($url);
     $app_id = $this->config->get('app_id');
@@ -105,58 +88,54 @@ class BaseXunFeiYun
       $date      = date('YmdHis', time());
       $file_name = $date . '.pcm';
       // todo 判断文件夹是否存在
-      $path_folder = public_path() . '/audio';
-      $save_path   = $path_folder . '/' . $file_name;
-      //需要以追加的方式进行写文件
+      $path_folder = public_path() . '/audio/';
+      if(!is_dir($path_folder)){
+        mkdir($path_folder, 0777, true);
+      }
+      $save_path   = $path_folder . $file_name;
       $audio_file = fopen($save_path, 'ab');
       $response   = $client->receive();
       $response   = json_decode($response, true);
-      // 科达讯飞会分多次发送消息
+
       do {
         if ($response['code']) {
           return $response;
         }
-        //返回的音频需要进行base64解码
         $audio = base64_decode($response['data']['audio']);
-        info('----准备写入文件----');
-        // info($audio);
         fwrite($audio_file, $audio);
-        //继续接收消息
         $response = $client->receive();
         $response = json_decode($response, true);
-        info('------合成状态------');
-        info($response);
-        info($response['data']['status']);
         if ($response['data']['status'] == 2) {
           $audio = base64_decode($response['data']['audio']);
           fwrite($audio_file, $audio);
         }
-
       } while ($response['data']['status'] != 2);
       fclose($audio_file);
       if (file_exists($save_path)) {
-        info('-----文件已保存---');
-        info($save_path);
-        info('-----开始转换格式---');
-        //TODO 变声强度设置
         $new_save_path = str_replace('pcm', 'wav', $save_path);
-        info($new_save_path);
         // -y 表示无需询问,直接覆盖输出文件;
         // -f s16le 用于设置文件格式为 s16le ;
         // -ar 16k 用于设置音频采样频率为 16k;
         // -ac 1 用于设置通道数为 1;
         // -i input.raw 用于设置输入文件为 input.pcm; output.wav 为输出文件.
-        exec('D:\ffmpeg\ffmpeg.exe -y -f s16le -ar 16k -ac 1 -i ' . $save_path . ' ' . $new_save_path);
+
+        // 根据环境返回 ffmpeg路径
+
+        // linux
+        if (PATH_SEPARATOR == ':') {
+          $ffmpeg_path = 'D:\ffmpeg\ffmpeg.exe';
+        //windows
+        } else {
+          $ffmpeg_path = 'D:\ffmpeg\ffmpeg.exe';
+        }
+        exec($ffmpeg_path.' -y -f s16le -ar 16k -ac 1 -i ' . $save_path . ' ' . $new_save_path);
       }
-      $audio_name = $file_name;
-      info('-------合成成功-------');
-      //   info($result);
       return [
         'code' => 0,
         'msg'  => '合成成功',
         'data' => [
-          'audio_name' => $audio_name,
-          'audio_url'  => './audio/' . $audio_name,
+          'audio_name' => $file_name,
+          'audio_url'  => './audio/' . $file_name,
         ]
       ];
     } catch (\Exception $e) {
@@ -168,6 +147,7 @@ class BaseXunFeiYun
       $client->close();
     }
   }
+
 
   /**
    * 生成要发送的消息体
