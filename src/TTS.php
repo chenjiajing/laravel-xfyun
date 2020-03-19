@@ -4,11 +4,15 @@ namespace ChenJiaJing\XunFeiYun;
 
 class TTS extends BaseXunFeiYun
 {
-
-  public function compose()
+  /** 文字合成语音接口
+   * @throws \XunFeiYun\Exceptions\InvalidResponseException
+   * @return false|string
+   * @throws \XunFeiYun\Exceptions\LocalCacheException
+   */
+  public function compose($content)
   {
     $url = "wss://tts-api.xfyun.cn/v2/tts?authorization=AUTHORIZATION&date=DATE&host=HOST";
-     $this->registerApi($url, __FUNCTION__, func_get_args());
-    return $this->wsForJson($url);
+    $authorization_url  = $this->getAuthorizationUrl($url);
+    return $this->wsForJson($authorization_url,$content);
   }
 }
