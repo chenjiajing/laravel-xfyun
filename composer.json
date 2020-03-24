@@ -8,8 +8,6 @@
       "email": "i@chenjiajing.com"
     }
   ],
-  "version":"1.0.0",
-
    "require": {
      "textalk/websocket": "1.0.*"
    },
