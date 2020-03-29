@@ -68,7 +68,7 @@ class TTS extends BaseXunFeiYun
       $date      = date('YmdHis', time());
       $file_name = $date . '.pcm';
       // todo 判断文件夹是否存在
-      $path_folder = config('xfyun.file_save_dir')??public_path() . '/audio/';
+      $path_folder = config('xfyun.tts.file_save_dir')??public_path() . '/audio/';
       if(!is_dir($path_folder)){
         mkdir($path_folder, 0777, true);
       }
@@ -94,12 +94,12 @@ class TTS extends BaseXunFeiYun
         $new_save_path = str_replace('pcm', 'wav', $save_path);
         // linux
         if (PATH_SEPARATOR == ':') {
-          $ffmpeg_path = config('xfyun.linux_path');
+          $ffmpeg_path = config('xfyun.tts.linux_path');
           //windows
         } else {
-          $ffmpeg_path = config('xfyun.window_path');
+          $ffmpeg_path = config('xfyun.tts.window_path');
         }
-        exec($ffmpeg_path.config('xfyun.instruct') . $save_path . ' ' . $new_save_path);
+        exec($ffmpeg_path.config('xfyun.tts.instruct') . $save_path . ' ' . $new_save_path);
       }
       return [
         'code' => 0,
@@ -128,7 +128,7 @@ class TTS extends BaseXunFeiYun
    */
   public static function createMsgData($app_id, $draft_content)
   {
-    $business_config =  config('xfyyun.business')??[];
+    $business_config =  config('xfyun.tts.business')??[];
     return [
       'common'   => [
         'app_id' => $app_id,
