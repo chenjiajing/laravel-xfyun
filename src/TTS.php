@@ -67,8 +67,9 @@ class TTS extends BaseXunFeiYun
       $client->send(json_encode($message, true));
       $date      = date('YmdHis', time());
       $file_name = $date . '.pcm';
+      $new_file_name = $date . '.wav';
       // todo 判断文件夹是否存在
-      $path_folder = config('xfyun.tts.file_save_dir')??public_path() . '/audio/';
+      $path_folder = config('xfyun.file_save_dir')??public_path() . '/audio/';
       if(!is_dir($path_folder)){
         mkdir($path_folder, 0777, true);
       }
@@ -90,23 +91,23 @@ class TTS extends BaseXunFeiYun
         }
       } while ($response['data']['status'] != 2);
       fclose($audio_file);
+      $new_save_path = str_replace('pcm', 'wav', $save_path);
       if (file_exists($save_path)) {
-        $new_save_path = str_replace('pcm', 'wav', $save_path);
         // linux
         if (PATH_SEPARATOR == ':') {
-          $ffmpeg_path = config('xfyun.tts.linux_path');
+          $ffmpeg_path = config('xfyun.tts.ffmpeg_config.linux_path');
           //windows
         } else {
-          $ffmpeg_path = config('xfyun.tts.window_path');
+          $ffmpeg_path = config('xfyun.tts.ffmpeg_config.window_path');
         }
-        exec($ffmpeg_path.config('xfyun.tts.instruct') . $save_path . ' ' . $new_save_path);
+        exec($ffmpeg_path.config('xfyun.tts.ffmpeg_config.instruct') . $save_path . ' ' . $new_save_path);
       }
       return [
         'code' => 0,
         'msg'  => '合成成功',
         'data' => [
-          'audio_name' => $file_name,
-          'audio_url'  => $path_folder . $file_name,
+          'audio_name' => $new_file_name,
+          'audio_url'  => $new_save_path,
         ]
       ];
     } catch (\Exception $e) {
