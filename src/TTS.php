@@ -68,7 +68,7 @@ class TTS extends BaseXunFeiYun
       $date      = date('YmdHis', time());
       $file_name = $date . '.pcm';
       // todo 判断文件夹是否存在
-      $path_folder = public_path() . '/audio/';
+      $path_folder = config('xfyun.file_save_dir')??public_path() . '/audio/';
       if(!is_dir($path_folder)){
         mkdir($path_folder, 0777, true);
       }
@@ -76,7 +76,6 @@ class TTS extends BaseXunFeiYun
       $audio_file = fopen($save_path, 'ab');
       $response   = $client->receive();
       $response   = json_decode($response, true);
-
       do {
         if ($response['code']) {
           return $response;
@@ -93,29 +92,21 @@ class TTS extends BaseXunFeiYun
       fclose($audio_file);
       if (file_exists($save_path)) {
         $new_save_path = str_replace('pcm', 'wav', $save_path);
-        // -y 表示无需询问,直接覆盖输出文件;
-        // -f s16le 用于设置文件格式为 s16le ;
-        // -ar 16k 用于设置音频采样频率为 16k;
-        // -ac 1 用于设置通道数为 1;
-        // -i input.raw 用于设置输入文件为 input.pcm; output.wav 为输出文件.
-
-        // 根据环境返回 ffmpeg路径
-
         // linux
         if (PATH_SEPARATOR == ':') {
-          $ffmpeg_path = 'D:\ffmpeg\ffmpeg.exe';
+          $ffmpeg_path = config('xfyun.linux_path');
           //windows
         } else {
-          $ffmpeg_path = 'D:\ffmpeg\ffmpeg.exe';
+          $ffmpeg_path = config('xfyun.window_path');
         }
-        exec($ffmpeg_path.' -y -f s16le -ar 16k -ac 1 -i ' . $save_path . ' ' . $new_save_path);
+        exec($ffmpeg_path.config('xfyun.instruct') . $save_path . ' ' . $new_save_path);
       }
       return [
         'code' => 0,
         'msg'  => '合成成功',
         'data' => [
           'audio_name' => $file_name,
-          'audio_url'  => './audio/' . $file_name,
+          'audio_url'  => $path_folder . $file_name,
         ]
       ];
     } catch (\Exception $e) {
@@ -137,32 +128,12 @@ class TTS extends BaseXunFeiYun
    */
   public static function createMsgData($app_id, $draft_content)
   {
-    $aue    = 'raw';
-    $auf    = 'audio/L16;rate=16000';
-    $vcn    = 'xiaoyan';
-    $speed  = 10;
-    $volume = 50;
-    $pitch  = 50;
-    $tte    = 'utf8';
-    $reg    = '2';
-    $ram    = '0';
-    $rdn    = '0';
+    $business_config =  config('xfyyun.business')??[];
     return [
       'common'   => [
         'app_id' => $app_id,
       ],
-      'business' => [
-        'aue'    => $aue,
-        'auf'    => $auf,
-        'vcn'    => $vcn,
-        'speed'  => (int)$speed,
-        'volume' => (int)$volume,
-        'pitch'  => (int)$pitch,
-        'tte'    => $tte,
-        'reg'    => $reg,
-        'ram'    => $ram,
-        'rdn'    => $rdn,
-      ],
+      'business' => $business_config,
       'data'     => [
         'status' => 2,
         'text'   => base64_encode($draft_content),

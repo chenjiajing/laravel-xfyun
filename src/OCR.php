@@ -9,14 +9,11 @@ class OCR extends BaseXunFeiYun
 
   public function handWriting($image_path)
   {
-    $day_time = strtotime('1970-1-1T00:00:00 UTC');
     // OCR手写文字识别服务webapi接口地址
     $api     = "http://webapi.xfyun.cn/v1/service/v1/ocr/handwriting";
     $app_id  = $this->config->get('app_id');
-    $api_key = $this->config->get('app_key');;
+    $api_key = $this->config->get('app_key');
     $current_time = time();
-    $param        = "";
-    $check_sum    = "";
     // 语种设置和是否返回文本位置信息
     $Param = array(
       "language" => "cn|en",
@@ -58,8 +55,6 @@ class OCR extends BaseXunFeiYun
     );
     $context  = stream_context_create($options);
     $result   = file_get_contents($url, false, $context);
-    // 错误码链接：https://www.xfyun.cn/document/error-code (code返回错误码时必看)
     return $result;
-    return "success";
   }
 }
